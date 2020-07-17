@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const config = require('config');
 const { check, validationResult } = require('express-validator');
 
 const User = require('../../models/User');
@@ -35,7 +37,7 @@ router.post(
         email,
       });
       if (user) {
-        return re
+        return res
           .status(400)
           .json({ errors: [{ message: '사용자가 이미 존재합니다' }] });
       }
@@ -61,7 +63,24 @@ router.post(
       await user.save();
 
       // jsonwebtoken 반환
-      res.send('User registered');
+      const payload = {
+        user: {
+          id: user.id,
+        },
+      };
+
+      // https://velopert.com/2389 참고
+      jwt.sign(
+        payload,
+        config.get('jwtSecret'),
+        { expiresIn: '5 days' },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token }); // 포스트맨으로 확인시 token:블라블라...이렇게 토큰이 발급되있음
+        }
+      );
+
+      //   res.send('User registered');
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');
