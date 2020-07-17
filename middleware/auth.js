@@ -15,7 +15,6 @@ module.exports = function (req, res, next) {
   // 토큰 확인
   try {
     const decoded = jwt.verify(token, config.get('jwtSecret'));
-
     req.user = decoded.user;
     next();
   } catch (err) {
